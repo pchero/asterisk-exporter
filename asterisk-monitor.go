@@ -1,1 +1,1 @@
-package asterisk-monitor
+package asterisk-exporter
