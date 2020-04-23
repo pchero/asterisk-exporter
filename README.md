@@ -1,2 +1,2 @@
-# asterisk-monitor
+# asterisk-exporter
 Asterisk exporter for prometheus.

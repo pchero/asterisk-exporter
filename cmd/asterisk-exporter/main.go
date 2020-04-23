@@ -5,14 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/gorilla/websocket"
+	"github.com/pchero/asterisk-exporter/pkg/amihandler"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -32,6 +34,11 @@ var (
 	astAriUserinfo = flag.String("ast_ari_userinfo", "asterisk:asterisk", "Asterisk's ARI user info. username:password.")
 	astAriAppname  = flag.String("ast_ari_appname", "asterisk-exporter", "Asterisk's ARI application name.")
 
+	amiHost     = flag.String("ami_host", "127.0.0.1:5038", "Asterisk's ami host")
+	amiPort     = flag.String("ami_port", "5038", "Asterisk's ami port")
+	amiUsername = flag.String("ami_username", "asterisk", "Asterisk's ami username")
+	amiPassword = flag.String("ami_password", "asterisk", "Asterisk's ami user password")
+
 	promAddress = flag.String("prom_address", ":9200", "Prometheus listen port")
 )
 
@@ -49,16 +56,19 @@ var (
 func main() {
 
 	flag.Parse()
-	log.SetFlags(0)
+	log.SetLevel(log.DebugLevel)
+
+	handler := amihandler.NewAMIHandler(*amiHost, *amiPort, *amiUsername, *amiPassword)
+	handler.Connect()
 
 	chanInterrupt := make(chan os.Signal, 1)
 	signal.Notify(chanInterrupt, os.Interrupt)
 
-	go ariHandler(chanAriMsg)
+	// go ariHandler(chanAriMsg)
 
-	go ariMsgHandler(chanAriMsg)
+	// go ariMsgHandler(chanAriMsg)
 
-	go promHandler()
+	// go promHandler()
 
 	// interrupt handler
 	select {
