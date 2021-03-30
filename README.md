@@ -1,2 +1,3 @@
-# asterisk-monitor
-Asterisk exporter for prometheus.
+# asterisk-exporter
+
+Asterisk metric exporter for prometheus
