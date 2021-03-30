@@ -1,4 +1,4 @@
 vendor
-asterisk-exporter
+asterisk-exporter*
 .vscode
 !cmd/*
