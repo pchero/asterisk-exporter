@@ -30,6 +30,11 @@ const (
 	idxChannelUniqueID     = 13
 )
 
+var (
+	channelTech    map[string]int = map[string]int{}
+	channelContext map[string]int = map[string]int{}
+)
+
 // Collect collects the asterisk's metrics and update the prometheus metric
 func (h *collector) Collect() error {
 
@@ -51,8 +56,13 @@ func (h *collector) collectChannels() error {
 		return err
 	}
 
-	chanTech := map[string]int{}
-	chanContext := map[string]int{}
+	// reset metrics
+	for k := range channelTech {
+		channelTech[k] = 0
+	}
+	for k := range channelContext {
+		channelContext[k] = 0
+	}
 
 	channels := strings.Split(string(res), "\n")
 	for _, channel := range channels {
@@ -63,17 +73,17 @@ func (h *collector) collectChannels() error {
 
 		// tech
 		tech := getTech(c[idxChannelName])
-		if _, ok := chanTech[tech]; !ok {
-			chanTech[tech] = 0
+		if _, ok := channelTech[tech]; !ok {
+			channelTech[tech] = 0
 		}
-		chanTech[tech] = chanTech[tech] + 1
+		channelTech[tech] = channelTech[tech] + 1
 
 		// context
 		ctx := c[idxChannelContext]
-		if _, ok := chanContext[ctx]; !ok {
-			chanContext[ctx] = 0
+		if _, ok := channelContext[ctx]; !ok {
+			channelContext[ctx] = 0
 		}
-		chanContext[ctx] = chanContext[ctx] + 1
+		channelContext[ctx] = channelContext[ctx] + 1
 
 		// set channel duration
 		duration, err := strconv.Atoi(c[idxChannelCallDuration])
@@ -85,11 +95,17 @@ func (h *collector) collectChannels() error {
 	}
 
 	// set metrics
-	for k, v := range chanTech {
+	for k, v := range channelTech {
 		promCurrentChannelTech.WithLabelValues(k).Set(float64(v))
+		if v <= 0 {
+			delete(channelTech, k)
+		}
 	}
-	for k, v := range chanContext {
+	for k, v := range channelContext {
 		promCurrentChannelContext.WithLabelValues(k).Set(float64(v))
+		if v <= 0 {
+			delete(channelContext, k)
+		}
 	}
 
 	return nil
