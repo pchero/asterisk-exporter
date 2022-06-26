@@ -36,7 +36,6 @@ func (h *collector) bridgeCollects() error {
 		log.Errorf("Could not execute asterisk command. err: %v", err)
 		return err
 	}
-	log.Debugf("tmp res. res: %v", res)
 
 	bridges := h.bridgeParser(string(res))
 
