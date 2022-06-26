@@ -16,6 +16,12 @@ Usage of ./asterisk-exporter-0.0.1-linux-amd64:
 
 # Metrics
 * asterisk_health_fail: Counter of asterisk health check failure.
+
+## channel
 * asterisk_crruent_channel_context: Shows current number of channels with context.
 * asterisk_crruent_channel_tech: Shows current number of channels with tech.
 * asterisk_channel_duration_bucket: Bucket for channel's duration.
+
+## bridge
+* asterisk_current_bridge_count: Shows current number of bridges with type/tech.
+* asterisk_bridge_duration_bucket: Bucket for bridge's duration.
