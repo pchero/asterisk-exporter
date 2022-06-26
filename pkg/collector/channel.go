@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+
+	"gitlab.com/voipbin/voip/asterisk-exporter.git/models/channel"
 )
 
 // List of channel concise parse item index
@@ -30,82 +32,44 @@ const (
 	idxChannelUniqueID     = 13
 )
 
-var (
-	channelTech    map[string]int = map[string]int{}
-	channelContext map[string]int = map[string]int{}
-)
-
-// Collect collects the asterisk's metrics and update the prometheus metric
-func (h *collector) Collect() error {
-
-	if err := h.collectChannels(); err != nil {
-		logrus.Errorf("Could not get channel metrics. err: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-// collectChannels collects the channel info
+// // channelCollects collects the channel info
 // example: asterisk -rx "core show channels concise"
 // PJSIP/test-00000000!demo!1234!50005!Up!Dial!Console/dsp,20!test!!!3!13!df20e970-d58e-476c-8738-24f345bfd190!1616987975.0
 // Console/dsp!default!!1!Up!AppDial!(Outgoing Line)!1234!!!3!13!df20e970-d58e-476c-8738-24f345bfd190!1616987975.1
-func (h *collector) collectChannels() error {
+func (h *collector) channelCollects() error {
+	log := logrus.WithFields(logrus.Fields{
+		"func": "channelCollects",
+	})
+
 	res, err := exec.Command("asterisk", "-rx", `core show channels concise`).Output()
 	if err != nil {
+		log.Errorf("Could not execute the asterisk command. err: %v", err)
 		return err
 	}
+	log.Debugf("tmp res. res: %v", res)
 
-	// reset metrics
-	for k := range channelTech {
-		channelTech[k] = 0
-	}
-	for k := range channelContext {
-		channelContext[k] = 0
-	}
+	channels := h.channelParser(string(res))
 
-	channels := strings.Split(string(res), "\n")
+	channelTech := map[string]int{}    // channel tech: count
+	channelContext := map[string]int{} // channel context: count
+
 	for _, channel := range channels {
-		c := strings.Split(channel, "!")
-		if len(c) < 2 {
-			continue
-		}
-
 		// tech
-		tech := getTech(c[idxChannelName])
-		if _, ok := channelTech[tech]; !ok {
-			channelTech[tech] = 0
-		}
-		channelTech[tech] = channelTech[tech] + 1
+		tech := getTech(channel.Name)
+		channelTech[tech]++
 
-		// context
-		ctx := c[idxChannelContext]
-		if _, ok := channelContext[ctx]; !ok {
-			channelContext[ctx] = 0
-		}
-		channelContext[ctx] = channelContext[ctx] + 1
+		// channel context
+		channelContext[channel.Context]++
 
-		// set channel duration
-		duration, err := strconv.Atoi(c[idxChannelCallDuration])
-		if err != nil {
-			logrus.Errorf("Could not parse the channel duration. err: %v", err)
-			continue
-		}
-		promChannelDuration.WithLabelValues(tech, ctx).Observe(float64(duration))
+		promChannelDuration.WithLabelValues(tech, channel.Context).Observe(float64(channel.CallDuration))
 	}
 
 	// set metrics
 	for k, v := range channelTech {
 		promCurrentChannelTech.WithLabelValues(k).Set(float64(v))
-		if v <= 0 {
-			delete(channelTech, k)
-		}
 	}
 	for k, v := range channelContext {
 		promCurrentChannelContext.WithLabelValues(k).Set(float64(v))
-		if v <= 0 {
-			delete(channelContext, k)
-		}
 	}
 
 	return nil
@@ -119,4 +83,52 @@ func getTech(c string) string {
 	}
 
 	return items[0]
+}
+
+// asterisk -rx "core show channels concise"
+// PJSIP/call-in-0000060e!call-in!+821100000005!8!Up!Stasis!voipbin,context=call-in,domain=pstn.voipbin.net,source=211.200.20.28!test11!!!3!47!5b20bec1-14a3-4b71-b3e1-7ed4d290b244!asterisk-call-6f58d55c9c-mdqhx-1656228434.2944
+func (h *collector) channelParser(data string) []*channel.Channel {
+
+	log := logrus.WithFields(logrus.Fields{
+		"func": "channelParser",
+	})
+
+	res := []*channel.Channel{}
+
+	datalines := strings.Split(string(data), "\n")
+	for _, dataline := range datalines {
+		items := strings.Split(dataline, "!")
+		if len(items) < 2 {
+			continue
+		}
+
+		// parse channel duration
+		duration, err := strconv.Atoi(items[idxChannelCallDuration])
+		if err != nil {
+			log.Errorf("Could not parse the channel duration. err: %v", err)
+			duration = 0
+		}
+
+		tmp := &channel.Channel{
+			Name:            items[idxChannelName],
+			Context:         items[idxChannelContext],
+			Extension:       items[idxChannelExtension],
+			Priority:        items[idxChannelPriority],
+			State:           items[idxChannelState],
+			Application:     items[idxChannelApplication],
+			ApplicationData: items[idxChannelApplicationData],
+			CallerNumber:    items[idxChannelCallerNumber],
+			AccountCode:     items[idxChannelAccountCode],
+			Account:         items[idxChannelAccount],
+
+			AMAFlag:      items[idxChannelAMAFlag],
+			CallDuration: duration,
+			BridgeID:     items[idxChannelBridgeID],
+			UniqueID:     items[idxChannelUniqueID],
+		}
+
+		res = append(res, tmp)
+	}
+
+	return res
 }
