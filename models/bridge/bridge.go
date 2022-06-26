@@ -1,5 +1,6 @@
 package bridge
 
+// Bridge defines
 type Bridge struct {
 	ID         string
 	Chans      int

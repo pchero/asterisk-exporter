@@ -36,6 +36,7 @@ func (h *collector) bridgeCollects() error {
 		log.Errorf("Could not execute asterisk command. err: %v", err)
 		return err
 	}
+	log.Debugf("tmp res. res: %v", res)
 
 	bridges := h.bridgeParser(string(res))
 
@@ -43,6 +44,11 @@ func (h *collector) bridgeCollects() error {
 	mapBridgeCount := map[string]map[string]int{}
 
 	for _, bridge := range bridges {
+		_, ok := mapBridgeCount[bridge.Type]
+		if !ok {
+			mapBridgeCount[bridge.Type] = map[string]int{}
+		}
+
 		mapBridgeCount[bridge.Type][bridge.Technology]++
 
 		promBridgeDuration.WithLabelValues(bridge.Type, bridge.Technology).Observe(bridge.Duration)

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Collector interface
 type Collector interface {
 	Run()
 }
@@ -15,6 +16,7 @@ type collector struct {
 	MetricInterval int
 }
 
+// NewCollector returns a new Collector
 func NewCollector(interval int) Collector {
 	h := &collector{
 		MetricInterval: interval,
@@ -91,7 +93,7 @@ var (
 			Name:      "bridge_duration",
 			Help:      "A duration time of the bridge",
 			Buckets: []float64{
-				5, 10, 30, 60, 120, 300, 600, 1800, 3600,
+				5, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200, 14400,
 			},
 		},
 		[]string{"type", "tech"},
@@ -104,10 +106,14 @@ func init() {
 		promCurrentChannelTech,
 		promCurrentChannelContext,
 		promChannelDuration,
+
+		promCurrentBridgeCount,
+		promBridgeDuration,
 	)
 }
 
 func (h *collector) Run() {
+	logrus.Debugf("Running the collect.")
 
 	for {
 		if err := h.Collect(); err != nil {

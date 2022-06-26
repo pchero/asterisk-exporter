@@ -46,6 +46,7 @@ func (h *collector) channelCollects() error {
 		log.Errorf("Could not execute the asterisk command. err: %v", err)
 		return err
 	}
+	log.Debugf("tmp res. res: %v", res)
 
 	channels := h.channelParser(string(res))
 
