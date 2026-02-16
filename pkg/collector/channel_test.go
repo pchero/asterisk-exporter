@@ -4,8 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-
 	"gitlab.com/voipbin/voip/asterisk-exporter.git/models/channel"
 )
 
@@ -87,9 +85,6 @@ PJSIP/call-in-0000060f!call-in!+821100000005!8!Up!Stasis!voipbin,context=call-in
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mc := gomock.NewController(t)
-			defer mc.Finish()
-
 			h := &collector{}
 
 			res := h.channelParser(tt.data)
