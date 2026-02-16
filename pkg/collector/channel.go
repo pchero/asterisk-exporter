@@ -63,7 +63,9 @@ func (h *collector) channelCollects() error {
 		promChannelDuration.WithLabelValues(tech, channel.Context).Observe(float64(channel.CallDuration))
 	}
 
-	// set metrics
+	// reset gauges to clear stale label combinations, then set current values
+	promCurrentChannelTech.Reset()
+	promCurrentChannelContext.Reset()
 	for k, v := range channelTech {
 		promCurrentChannelTech.WithLabelValues(k).Set(float64(v))
 	}
@@ -97,7 +99,7 @@ func (h *collector) channelParser(data string) []*channel.Channel {
 	datalines := strings.Split(string(data), "\n")
 	for _, dataline := range datalines {
 		items := strings.Split(dataline, "!")
-		if len(items) < 2 {
+		if len(items) <= idxChannelUniqueID {
 			continue
 		}
 
