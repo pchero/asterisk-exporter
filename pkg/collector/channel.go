@@ -1,9 +1,11 @@
 package collector
 
 import (
+	"context"
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -41,7 +43,10 @@ func (h *collector) channelCollects() error {
 		"func": "channelCollects",
 	})
 
-	res, err := exec.Command("asterisk", "-rx", `core show channels concise`).Output()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	res, err := exec.CommandContext(ctx, "asterisk", "-rx", `core show channels concise`).Output()
 	if err != nil {
 		log.Errorf("Could not execute the asterisk command. err: %v", err)
 		return err
@@ -51,17 +56,27 @@ func (h *collector) channelCollects() error {
 
 	channelTech := map[string]int{}    // channel tech: count
 	channelContext := map[string]int{} // channel context: count
+	currentChannels := map[string]channelSnapshot{}
 
 	for _, channel := range channels {
-		// tech
 		tech := getTech(channel.Name)
 		channelTech[tech]++
-
-		// channel context
 		channelContext[channel.Context]++
 
-		promChannelDuration.WithLabelValues(tech, channel.Context).Observe(float64(channel.CallDuration))
+		currentChannels[channel.UniqueID] = channelSnapshot{
+			tech:     tech,
+			context:  channel.Context,
+			duration: channel.CallDuration,
+		}
 	}
+
+	// observe duration for channels that disappeared (ended) since last cycle
+	for id, prev := range h.prevChannels {
+		if _, exists := currentChannels[id]; !exists {
+			promChannelDuration.WithLabelValues(prev.tech, prev.context).Observe(float64(prev.duration))
+		}
+	}
+	h.prevChannels = currentChannels
 
 	// reset gauges to clear stale label combinations, then set current values
 	promCurrentChannelTech.Reset()
