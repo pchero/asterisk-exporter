@@ -12,14 +12,30 @@ type Collector interface {
 	Run()
 }
 
+type channelSnapshot struct {
+	tech    string
+	context string
+	duration int
+}
+
+type bridgeSnapshot struct {
+	bridgeType string
+	tech       string
+	duration   float64
+}
+
 type collector struct {
 	MetricInterval int
+	prevChannels   map[string]channelSnapshot
+	prevBridges    map[string]bridgeSnapshot
 }
 
 // NewCollector returns a new Collector
 func NewCollector(interval int) Collector {
 	h := &collector{
 		MetricInterval: interval,
+		prevChannels:   map[string]channelSnapshot{},
+		prevBridges:    map[string]bridgeSnapshot{},
 	}
 
 	return h

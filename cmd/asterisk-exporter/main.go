@@ -16,7 +16,7 @@ import (
 )
 
 // args
-var webListenAddress = flag.String("web_listen_address", ":9495", "Address to listen on for web interface and telemetry.")
+var webListenAddress = flag.String("web_listen_address", "127.0.0.1:9495", "Address to listen on for web interface and telemetry.")
 var webListenPath = flag.String("web_listen_path", "/metrics", "Path under which to expose metrics.")
 
 var asteriskMetricInterval = flag.Int("asterisk_metric_interval", 5, "Interval sec for metric getting")

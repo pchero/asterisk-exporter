@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"context"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -31,7 +32,10 @@ func (h *collector) bridgeCollects() error {
 		"func": "bridgeCollects",
 	})
 
-	res, err := exec.Command("asterisk", "-rx", `bridge show all`).Output()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	res, err := exec.CommandContext(ctx, "asterisk", "-rx", `bridge show all`).Output()
 	if err != nil {
 		log.Errorf("Could not execute asterisk command. err: %v", err)
 		return err
@@ -41,17 +45,30 @@ func (h *collector) bridgeCollects() error {
 
 	// type:tech:count
 	mapBridgeCount := map[string]map[string]int{}
+	currentBridges := map[string]bridgeSnapshot{}
 
-	for _, bridge := range bridges {
-		_, ok := mapBridgeCount[bridge.Type]
+	for _, b := range bridges {
+		_, ok := mapBridgeCount[b.Type]
 		if !ok {
-			mapBridgeCount[bridge.Type] = map[string]int{}
+			mapBridgeCount[b.Type] = map[string]int{}
 		}
 
-		mapBridgeCount[bridge.Type][bridge.Technology]++
+		mapBridgeCount[b.Type][b.Technology]++
 
-		promBridgeDuration.WithLabelValues(bridge.Type, bridge.Technology).Observe(bridge.Duration)
+		currentBridges[b.ID] = bridgeSnapshot{
+			bridgeType: b.Type,
+			tech:       b.Technology,
+			duration:   b.Duration,
+		}
 	}
+
+	// observe duration for bridges that disappeared (ended) since last cycle
+	for id, prev := range h.prevBridges {
+		if _, exists := currentBridges[id]; !exists {
+			promBridgeDuration.WithLabelValues(prev.bridgeType, prev.tech).Observe(prev.duration)
+		}
+	}
+	h.prevBridges = currentBridges
 
 	// reset gauge to clear stale label combinations, then set current values
 	promCurrentBridgeCount.Reset()
