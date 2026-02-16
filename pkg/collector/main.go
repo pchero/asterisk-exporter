@@ -34,6 +34,8 @@ type collector struct {
 func NewCollector(interval int) Collector {
 	h := &collector{
 		MetricInterval: interval,
+		prevChannels:   map[string]channelSnapshot{},
+		prevBridges:    map[string]bridgeSnapshot{},
 	}
 
 	return h
