@@ -53,7 +53,8 @@ func (h *collector) bridgeCollects() error {
 		promBridgeDuration.WithLabelValues(bridge.Type, bridge.Technology).Observe(bridge.Duration)
 	}
 
-	// set count
+	// reset gauge to clear stale label combinations, then set current values
+	promCurrentBridgeCount.Reset()
 	for bridgeType, tmp := range mapBridgeCount {
 		for bridgeTech, bridgeCount := range tmp {
 			promCurrentBridgeCount.WithLabelValues(bridgeType, bridgeTech).Set(float64(bridgeCount))
@@ -80,7 +81,7 @@ func (h *collector) bridgeParser(data string) []bridge.Bridge {
 		}
 
 		items := strings.Fields(dataline)
-		if len(items) < 2 {
+		if len(items) <= idxBridgeDuration {
 			continue
 		}
 
