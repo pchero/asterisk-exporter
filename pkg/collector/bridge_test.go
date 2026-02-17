@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-
 	"gitlab.com/voipbin/voip/asterisk-exporter.git/models/bridge"
 )
 
@@ -30,9 +28,6 @@ func Test_convertBridgeDuration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mc := gomock.NewController(t)
-			defer mc.Finish()
-
 			h := &collector{}
 
 			res := h.convertBridgeDuration(tt.duration)
@@ -104,9 +99,6 @@ func Test_bridgeParser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mc := gomock.NewController(t)
-			defer mc.Finish()
-
 			h := &collector{}
 
 			res := h.bridgeParser(tt.data)
