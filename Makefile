@@ -1,5 +1,5 @@
 TARGET = asterisk-exporter
-VERSION = 0.0.2
+VERSION = 0.0.5
 
 TARGET_RELEASE = $(TARGET)-$(VERSION)
 
