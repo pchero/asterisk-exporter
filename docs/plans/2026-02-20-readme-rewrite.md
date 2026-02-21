@@ -1,3 +1,25 @@
+# README Rewrite Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Rewrite the README to follow standard Prometheus exporter conventions for new users.
+
+**Architecture:** Single file replacement. No code changes, no new files beyond README.md itself.
+
+**Tech Stack:** Markdown
+
+---
+
+### Task 1: Rewrite README.md
+
+**Files:**
+- Modify: `README.md`
+
+**Step 1: Replace README.md with the new content**
+
+Write the following complete content to `README.md`:
+
+```markdown
 # asterisk-exporter
 
 Prometheus metrics exporter for Asterisk PBX. Polls Asterisk via CLI commands (`asterisk -rx`) and exposes channel and bridge metrics on an HTTP endpoint.
@@ -103,3 +125,24 @@ asterisk_health_fail{} 0
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+```
+
+**Step 2: Verify the README renders correctly**
+
+Run: `cat README.md | head -5`
+Expected: Title and description lines appear correctly.
+
+**Step 3: Commit**
+
+```bash
+git add README.md
+git commit -m "Rewrite README for new users
+
+- asterisk-exporter: Restructure README to follow Prometheus exporter conventions
+- asterisk-exporter: Fix version from 0.0.1 to 0.0.5
+- asterisk-exporter: Fix default listen address to 127.0.0.1:9495
+- asterisk-exporter: Add prerequisites and build sections
+- asterisk-exporter: Convert metrics list to table format with labels
+- asterisk-exporter: Trim example output to asterisk-specific metrics only
+- asterisk-exporter: Add license reference"
+```
