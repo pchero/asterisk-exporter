@@ -15,18 +15,23 @@ import (
 // List of bridge parse item index
 const (
 
-	// Bridge-ID    Chans    Type    Technology    Duration
+	// Bridge-ID                            Name                                 Chans Type            Technology      Duration
+	//
+	// Asterisk's "bridge show all" output includes a Name column (index 1) between
+	// Bridge-ID and Chans (e.g. VoIPBin tags bridges with "reference_type=call,reference_id=<uuid>").
+	// It is not currently parsed into the Bridge struct, so the index sequence skips 1.
 
 	idxBridgeID         = 0
-	idxBridgeChannels   = 1
-	idxBridgeType       = 2
-	idxBridgeTechnology = 3
-	idxBridgeDuration   = 4
+	idxBridgeChannels   = 2
+	idxBridgeType       = 3
+	idxBridgeTechnology = 4
+	idxBridgeDuration   = 5
 )
 
 // bridgeCollects collects the bridge info
 // example: asterisk -rx "bridge show all"
-// 008e2905-1aa7-4106-b388-3e3f5c157265     0 stasis          simple_bridge   218:44:47
+// Bridge-ID                            Name                                 Chans Type            Technology      Duration
+// 008e2905-1aa7-4106-b388-3e3f5c157265 reference_type=call,reference_id=5cef1dbc-13d8-11ec-9199-f3e0e965a469     0 stasis          simple_bridge   218:44:47
 func (h *collector) bridgeCollects() error {
 	log := logrus.WithFields(logrus.Fields{
 		"func": "bridgeCollects",
@@ -81,9 +86,10 @@ func (h *collector) bridgeCollects() error {
 	return nil
 }
 
-// bridgeCollects collects the bridge info
+// bridgeParser parses the output of "asterisk -rx bridge show all"
 // example: asterisk -rx "bridge show all"
-// 008e2905-1aa7-4106-b388-3e3f5c157265     0 stasis          simple_bridge   218:44:47
+// Bridge-ID                            Name                                 Chans Type            Technology      Duration
+// 008e2905-1aa7-4106-b388-3e3f5c157265 reference_type=call,reference_id=5cef1dbc-13d8-11ec-9199-f3e0e965a469     0 stasis          simple_bridge   218:44:47
 func (h *collector) bridgeParser(data string) []bridge.Bridge {
 	log := logrus.WithFields(logrus.Fields{
 		"func": "bridgeParser",

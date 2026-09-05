@@ -22,7 +22,7 @@ This cross-compiles binaries for linux/amd64, linux/arm64, windows/amd64, window
 ## Usage
 
 ```
-./asterisk-exporter-0.0.5-linux-amd64 [flags]
+./asterisk-exporter-0.0.6-linux-amd64 [flags]
 ```
 
 | Flag | Default | Description |

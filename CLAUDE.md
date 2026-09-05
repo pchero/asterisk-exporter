@@ -12,7 +12,7 @@ Prometheus metrics exporter for Asterisk PBX. Polls Asterisk via CLI commands (`
 # Build for all platforms (linux/windows/macos)
 make build
 
-# Build output: asterisk-exporter-0.0.5-{os}-{arch}
+# Build output: asterisk-exporter-0.0.6-{os}-{arch}
 # Cross-compile targets defined in build.sh
 
 # Run tests
@@ -25,7 +25,7 @@ go test -v ./pkg/collector/...
 go test -v -run TestChannelParser ./pkg/collector/...
 
 # Run the binary
-./asterisk-exporter-0.0.5-linux-amd64 -web_listen_address=":9495" -asterisk_metric_interval=5
+./asterisk-exporter-0.0.6-linux-amd64 -web_listen_address=":9495" -asterisk_metric_interval=5
 ```
 
 ## Architecture
